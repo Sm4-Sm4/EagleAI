@@ -139,7 +139,7 @@ async function typeAIMessage(userMsg){
     // ------------------------------
     // REQUÊTE VERS TON BACKEND
     // ------------------------------
-    const response = await fetch("http://2a01:e0a:46b:bb30:21b6:fe20:2a61:aff3:49323/chat", {
+    const response = await fetch("http://[2a01:e0a:46b:bb30:21b6:fe20:2a61:aff3]:49323/chat", {
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ message: userMsg })
@@ -161,5 +161,6 @@ createInputLine();
 </script>
 </body>
 </html>
+
 
 
