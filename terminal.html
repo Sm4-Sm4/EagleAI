@@ -6,21 +6,31 @@
 <title>Eagle Terminal</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body { background: #000; color: #00ff88; font-family: "Source Code Pro", monospace; overflow: hidden; }
-#mainContainer { display:flex; width:100vw; height:100vh; }
-#sidebar { width:280px; background: linear-gradient(180deg,#111,#0a0a0a); border-right:1px solid #222; padding:16px; display:flex; flex-direction:column; justify-content:space-between; }
-#sidebar .btn { width:100%; padding:6px 10px; background:transparent; color:#23D200; border:1px solid #23D200; border-radius:2px; font-weight:bold; text-align:center; cursor:pointer; margin-bottom:6px; font-size:1rem; transition: background 0.2s, color 0.2s; }
-#sidebar .btn:hover { background:#00ff88; color:#000; }
-#chatContainer { flex:1; display:flex; flex-direction:column; padding:16px; background:#000; border-left:1px solid #222; overflow-y:auto; font-family: "Source Code Pro", monospace; font-size:18px; }
-.terminal-line { display:flex; flex-wrap:wrap; width:100%; }
-.prompt { color:#23D200; user-select:none; flex-shrink:0; width:140px; font-size:18px; }
-.input-wrapper { display:flex; flex-wrap:wrap; white-space:pre-wrap; word-break:break-word; flex:1; font-size:18px; }
-.input-text { color:#23D200; }
-.cursor { color:#23D200; animation:blink 1s steps(1) infinite; }
-@keyframes blink { 50% { opacity:0; } }
-.msg-ai, .msg-error { color:#fff; white-space:pre-wrap; word-break:break-word; font-size:18px; display:flex; }
-.msg-ai::before, .msg-error::before { content:""; display:inline-block; width:140px; flex-shrink:0; }
-.msg-error { color:#f92672; }
+  body { background: #000; color: #00ff88; font-family: "Source Code Pro", monospace; overflow: hidden; }
+  #mainContainer { display:flex; width:100vw; height:100vh; }
+  #sidebar { width:280px; background: linear-gradient(180deg,#111,#0a0a0a); border-right:1px solid #222; padding:16px; display:flex; flex-direction:column; justify-content:space-between; }
+  #sidebar .btn { width:100%; padding:6px 10px; background:transparent; color:#23D200; border:1px solid #23D200; border-radius:2px; font-weight:bold; text-align:center; cursor:pointer; margin-bottom:6px; font-size:1rem; transition: background 0.2s, color 0.2s; }
+  #sidebar .btn:hover { background:#00ff88; color:#000; }
+  #chatContainer { flex:1; display:flex; flex-direction:column; padding:16px; background:#000; border-left:1px solid #222; overflow-y:auto; font-size:18px; }
+  .terminal-line { display:flex; flex-wrap:wrap; width:100%; }
+  .prompt { color:#23D200; user-select:none; flex-shrink:0; width:140px; font-size:18px; }
+  .input-wrapper { display:flex; flex-wrap:wrap; white-space:pre-wrap; word-break:break-word; flex:1; font-size:18px; }
+  .input-text { color:#23D200; }
+  .cursor { color:#23D200; animation:blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .msg-ai, .msg-error { color:#fff; white-space:pre-wrap; word-break:break-word; font-size:18px; display:flex; }
+  .msg-ai::before, .msg-error::before { content:""; display:inline-block; width:140px; flex-shrink:0; }
+  .msg-error { color:#f92672; }
+
+  /* Popup Tokens */
+  #tokenPopup { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-blur:2px; z-index:50; justify-content:center; align-items:center; }
+  #tokenPopup .popup-content { background:#111; border:2px solid #23D200; border-radius:1rem; padding:2rem; width:24rem; max-width:90vw; position:relative; transform:scale(0.9); opacity:0; transition:all 0.3s ease; }
+  #tokenPopup.show { display:flex; }
+  #tokenPopup.show .popup-content { transform:scale(1); opacity:1; }
+  #tokenPopup button#closePopup { position:absolute; top:0.5rem; right:0.5rem; font-size:1.25rem; font-weight:bold; color:#23D200; background:none; border:none; cursor:pointer; }
+  #tokenPopup .btnOffer { padding:0.75rem; font-weight:bold; border:2px solid #23D200; border-radius:0.5rem; text-align:center; background:#000; color:#23D200; transition:all 0.3s; }
+  #tokenPopup .btnOffer:hover { background:#111; border-color:#1ed760; color:#23D200; }
+  #tokenPopup .popular-label { position:absolute; top:-0.75rem; left:50%; transform:translateX(-50%); background:#1ed760; color:#000; font-size:0.75rem; font-weight:600; padding:0.25rem 0.5rem; border-radius:9999px; }
 </style>
 </head>
 <body>
@@ -37,9 +47,26 @@ body { background: #000; color: #00ff88; font-family: "Source Code Pro", monospa
   <div id="chatContainer"></div>
 </div>
 
+<!-- Popup Tokens -->
+<div id="tokenPopup">
+  <div class="popup-content">
+    <button id="closePopup">✖</button>
+    <h2 class="text-2xl font-bold text-[#23D200] text-center mb-4">Recharger vos Tokens</h2>
+    <p class="text-gray-400 mb-6 text-center">Choisissez une offre et cliquez pour obtenir plus de tokens.</p>
+    <div class="flex flex-col gap-4">
+      <button class="btnOffer" data-tokens="100">100 Tokens - 1,99€</button>
+      <div class="relative">
+        <span class="popular-label">Populaire</span>
+        <button class="btnOffer" data-tokens="250">250 Tokens - 4,99€</button>
+      </div>
+      <button class="btnOffer" data-tokens="500">500 Tokens - 10,99€</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ------------------------------
-// PROTECTION + BYPASS "dimitri"
+// PROTECTION + BYPASS
 // ------------------------------
 const user = localStorage.getItem("user");
 if(!user){
@@ -57,13 +84,6 @@ if(!user){
 // ------------------------------
 document.getElementById("btnProfile").addEventListener("click",()=>{window.location.href="./login.html";});
 document.getElementById("btnNewChat").addEventListener("click",()=>{window.location.href="./terminal.html";});
-
-// ------------------------------
-// Recharger tokens
-// ------------------------------
-document.getElementById("btnReloadTokens").addEventListener("click", () => {
-  // Ici tu peux ajouter ton appel backend pour créditer les tokens
-});
 
 // ------------------------------
 // Terminal IA
@@ -139,7 +159,7 @@ async function typeAIMessage(userMsg){
   let startTime = Date.now();
   const interval = setInterval(()=>{
     const elapsed = Date.now()-startTime;
-    thinking.textContent = `Reflexion ${elapsed} ms`;
+    thinking.textContent = `Réflexion ${elapsed} ms`;
     chatContainer.scrollTop = chatContainer.scrollHeight;
   },50);
 
@@ -149,7 +169,6 @@ async function typeAIMessage(userMsg){
       headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ message: userMsg })
     });
-
     const data = await response.json();
     clearInterval(interval);
     thinking.remove();
@@ -163,27 +182,29 @@ async function typeAIMessage(userMsg){
 }
 
 createInputLine();
+
+// ------------------------------
+// Popup Tokens
+// ------------------------------
+const btnReload = document.getElementById("btnReloadTokens");
+const popup = document.getElementById("tokenPopup");
+const closePopup = document.getElementById("closePopup");
+const offerButtons = document.querySelectorAll(".btnOffer");
+
+btnReload.addEventListener("click", () => popup.classList.add("show"));
+closePopup.addEventListener("click", () => popup.classList.remove("show"));
+popup.addEventListener("click", e => { if(e.target===popup) popup.classList.remove("show"); });
+
+offerButtons.forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const tokens = btn.getAttribute("data-tokens");
+    popup.classList.remove("show");
+    window.location.href = `crypto.html?tokens=${tokens}`;
+  });
+});
 </script>
-  <div id="tokenPopup" class="fixed inset-0 bg-black/75 backdrop-blur-sm flex justify-center items-center z-50 hidden opacity-0 transition-opacity duration-300">
-  <div class="bg-[#111] border-2 border-[#23D200] rounded-2xl p-8 w-96 max-w-[90vw] relative shadow-lg transform scale-90 transition-transform duration-300">
-    <button id="closePopup" class="absolute top-3 right-3 text-[#23D200] font-bold text-xl hover:text-white transition-colors">✖</button>
-    <h2 class="text-3xl font-extrabold text-[#23D200] mb-4 text-center">Recharger vos Tokens</h2>
-    <p class="text-gray-400 mb-6 text-center">Choisissez une offre et cliquez sur Acheter pour obtenir plus de tokens.</p>
-    <div class="flex flex-col gap-4">
-      <button class="btnOffer py-3 font-bold text-lg rounded-lg transition-all duration-300 bg-[#000] border-2 border-[#23D200]" data-tokens="100">100 Tokens - 1,99€</button>
-      <div class="relative">
-        <span class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-[#1ed760] text-black px-3 py-1 text-xs font-semibold rounded-full shadow-lg">Populaire</span>
-        <button class="btnOffer py-3 font-bold text-lg rounded-lg transition-all duration-300 bg-[#000] border-2 border-[#23D200]" data-tokens="250">250 Tokens - 4,99€</button>
-      </div>
-      <button class="btnOffer py-3 font-bold text-lg rounded-lg transition-all duration-300 bg-[#000] border-2 border-[#23D200]" data-tokens="500">500 Tokens - 10,99€</button>
-    </div>
-  </div>
-</div>
-<script src="./tokenPopup.js"></script>
 </body>
 </html>
-
-
 
 
 
