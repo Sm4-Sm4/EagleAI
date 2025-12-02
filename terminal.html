@@ -29,6 +29,7 @@ body { background: #000; color: #00ff88; font-family: "Source Code Pro", monospa
     <div class="flex flex-col">
       <button id="btnProfile" class="btn">Profile</button>
       <button id="btnNewChat" class="btn">New Chat</button>
+      <button id="btnReloadTokens" class="btn">Recharger Tokens</button>
       <div id="conversationList"></div>
     </div>
     <a href="https://t.me/+DKNhCjWNY4A2NmQx" target="_blank" class="btn mt-4">Rejoindre Telegram</a>
@@ -54,11 +55,18 @@ if(!user){
 // ------------------------------
 // Redirection boutons
 // ------------------------------
-document.getElementById("btnProfile").addEventListener("click",()=>{window.location.href="./404.html";});
+document.getElementById("btnProfile").addEventListener("click",()=>{window.location.href="./login.html";});
 document.getElementById("btnNewChat").addEventListener("click",()=>{window.location.href="./terminal.html";});
 
 // ------------------------------
-// Terminal IA (version réelle sans simulation)
+// Recharger tokens
+// ------------------------------
+document.getElementById("btnReloadTokens").addEventListener("click", () => {
+  // Ici tu peux ajouter ton appel backend pour créditer les tokens
+});
+
+// ------------------------------
+// Terminal IA
 // ------------------------------
 const chatContainer = document.getElementById("chatContainer");
 let lastRequestTime = 0;
@@ -131,14 +139,11 @@ async function typeAIMessage(userMsg){
   let startTime = Date.now();
   const interval = setInterval(()=>{
     const elapsed = Date.now()-startTime;
-    thinking.textContent = `eagle réfléchit : ${elapsed} ms`;
+    thinking.textContent = `Reflexion ${elapsed} ms`;
     chatContainer.scrollTop = chatContainer.scrollHeight;
   },50);
 
   try{
-    // ------------------------------
-    // REQUÊTE VERS TON BACKEND
-    // ------------------------------
     const response = await fetch("https://lamont-beechy-goodly.ngrok-free.dev/chat", {
       method:"POST",
       headers:{"Content-Type":"application/json"},
@@ -159,8 +164,11 @@ async function typeAIMessage(userMsg){
 
 createInputLine();
 </script>
+<script src="./tokenPopup.js"></script>
 </body>
 </html>
+
+
 
 
 
